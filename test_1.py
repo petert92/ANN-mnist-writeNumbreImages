@@ -1,6 +1,7 @@
 # baseline cnn model for mnist
 from numpy import mean
 from numpy import std
+from keras.models import load_model
 from matplotlib import pyplot
 from sklearn.model_selection import KFold
 from keras.datasets import mnist
@@ -37,11 +38,10 @@ def load_dataset():
     # show the figure
 	pyplot.show()
 '''
+#(trainX, trainY), (testX, testY) = load_dataset()
 
-# (trainX, trainY), (testX, testY) = load_dataset()
 
-
-# scale pixels: original_values black_to_white [0,255] -> rescale_to [0,1]
+## scale pixels: original_values black_to_white [0,255] -> rescale_to [0,1]
 def prep_pixels(train, test):
 	# convert from integers to floats
 	train_norm = train.astype('float32')
@@ -51,9 +51,11 @@ def prep_pixels(train, test):
 	test_norm = test_norm / 255.0
 	# return normalized images
 	return train_norm, test_norm
-## (trainX), (testX) = prep_pixels(trainX, testX)
+#(trainX), (testX) = prep_pixels(trainX, testX)
 
-# define cnn model
+## define cnn model
+# output: model 
+# Mdeo: conv_Relu_MaxPool+dense_Relu+dense_SoftMax;SGD;crossEntropy
 def define_model():
 	model = Sequential()
 	model.add(Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_uniform', input_shape=(28, 28, 1))) # convolutional front-end: 32 filters->size(3,3)
@@ -66,16 +68,17 @@ def define_model():
 	opt = SGD(lr=0.01, momentum=0.9) # stochastic gradient descent optimizer. learning rate=0.01, momentum=0.9
 	model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy']) # loss func, monitoring->accuracy
 	return model
-## model = define_model()
+#model = define_model()
 
-# evaluate a model using k-fold cross-validation (10 epochs, batch=32)
-## input: training dataset
-## output: list of accuracy scores and training histories
+## evaluate a model using k-fold cross-validation (10 epochs, batch=32)
+# input: training dataset
+# output: list of accuracy scores and training histories and best model
 def evaluate_model(dataX, dataY, n_folds=2):
 	scores, histories = list(), list()
 	# prepare cross validation
 	kfold = KFold(n_folds, shuffle=True, random_state=1)
 	# enumerate splits
+	i = 0
 	for train_ix, test_ix in kfold.split(dataX):
 		# define model
 		model = define_model()
@@ -89,15 +92,31 @@ def evaluate_model(dataX, dataY, n_folds=2):
 		# stores scores
 		scores.append(acc)
 		histories.append(history)
-		print(trainX.shape)
-		prediccion = model.predict(trainX[1][::][::][::])
-		print(prediccion)
-	return scores, histories
-## (scores, histories) = evaluate_model(dataX, dataY, n_folds=5)
+		if acc > scores[i-1]:
+			bestModel = model
+		i+=1
+		#print(trainX.shape)
+		#prediccion = model.predict(trainX[1][::][::][::])
+		#print(prediccion)
+	return scores, histories, bestModel
+#(scores, histories, model) = evaluate_model(dataX, dataY, n_folds=5)
 
-# plot diagnostic learning curves
-## input: histories from train and evaluate
-## output: screen plots
+## save model to H5 file
+#input: keras model, fileName.h5
+def saveKerasModel(model,fileName):
+	model.save(fileName)
+
+## load model from H5 file
+# input: fileName.h5
+# output: keras model
+def loadKerasModel(fileName):
+	model = load_model(fileName)
+	return model
+
+
+## plot diagnostic learning curves
+# input: histories from train and evaluate
+# output: screen plots
 def summarize_diagnostics(histories):
 	for i in range(len(histories)):
 		# plot loss
@@ -111,31 +130,32 @@ def summarize_diagnostics(histories):
 		pyplot.plot(histories[i].history['accuracy'], color='blue', label='train')
 		pyplot.plot(histories[i].history['val_accuracy'], color='orange', label='test')
 	pyplot.show()
-## summarize_diagnostics(histories)
+#summarize_diagnostics(histories)
 
-# summarize model performance
-## input: scores recolected during evaluation
-## output: plots: calculated mean and standard deviation
+## summarize model performance
+# input: scores recolected during evaluation
+# output: plots: calculated mean and standard deviation
 def summarize_performance(scores):
 	# print summary
 	print('Accuracy: mean=%.3f std=%.3f, n=%d' % (mean(scores)*100, std(scores)*100, len(scores)))
 	# box and whisker plots of results
 	pyplot.boxplot(scores)
 	pyplot.show()
-## summarize_performance(scores)
+#summarize_performance(scores)
 
-# run the test harness for evaluating a model
+## run the test harness for evaluating a model
 def run_test_harness():
 	# load dataset
 	trainX, trainY, testX, testY = load_dataset()
 	# prepare pixel data
 	trainX, testX = prep_pixels(trainX, testX)
 	# evaluate model
-	scores, histories = evaluate_model(trainX, trainY)
+	scores, histories, model = evaluate_model(trainX, trainY)
+	saveKerasModel(model, "ANN_mnist_writtenNumberImages")
 	# learning curves
-	## summarize_diagnostics(histories)
-	# summarize estimated performance
-	## summarize_performance(scores)
+	#summarize_diagnostics(histories)
+	#summarize estimated performance
+	#summarize_performance(scores)
 	
 
 run_test_harness()
