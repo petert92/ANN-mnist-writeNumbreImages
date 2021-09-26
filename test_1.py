@@ -1,6 +1,7 @@
 # baseline cnn model for mnist
 from numpy import mean
 from numpy import std
+from numpy import argmax
 from keras.models import load_model
 from matplotlib import pyplot
 from sklearn.model_selection import KFold
@@ -157,5 +158,10 @@ def run_test_harness():
 	#summarize estimated performance
 	#summarize_performance(scores)
 	
+## precit data
+# input: keras model, data (images shape:Nx4)
+def predictKerasModel_modelClass(model, data):
+	probabilitiesVecto = model.predict(data)
+	print(argmax(probabilitiesVecto, axis=1))
 
 run_test_harness()
