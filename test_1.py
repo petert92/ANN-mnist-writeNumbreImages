@@ -1,4 +1,6 @@
 # baseline cnn model for mnist
+from keras.backend import batch_normalization
+from keras.layers.normalization.batch_normalization import BatchNormalization
 from numpy import mean
 from numpy import std
 from numpy import argmax
@@ -60,10 +62,12 @@ def prep_pixels(train, test):
 def define_model():
 	model = Sequential()
 	model.add(Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_uniform', input_shape=(28, 28, 1))) # convolutional front-end: 32 filters->size(3,3)
+	model.add(BatchNormalization())
 	model.add(MaxPooling2D((2, 2)))
 	model.add(Flatten()) # The filter maps can then be flattened to provide features to the classifier
 	# From here is a multi-class classification task
 	model.add(Dense(100, activation='relu', kernel_initializer='he_uniform')) # interpret the feature
+	model.add(BatchNormalization())
 	model.add(Dense(10, activation='softmax')) # output= 10 cause 10 classes
 	# compile model
 	opt = SGD(lr=0.01, momentum=0.9) # stochastic gradient descent optimizer. learning rate=0.01, momentum=0.9
@@ -74,7 +78,7 @@ def define_model():
 ## evaluate a model using k-fold cross-validation (10 epochs, batch=32)
 # input: training dataset
 # output: list of accuracy scores and training histories and best model
-def evaluate_model(dataX, dataY, n_folds=2):
+def evaluate_model(dataX, dataY, n_folds=5):
 	scores, histories = list(), list()
 	# prepare cross validation
 	kfold = KFold(n_folds, shuffle=True, random_state=1)
@@ -154,9 +158,9 @@ def run_test_harness():
 	scores, histories, model = evaluate_model(trainX, trainY)
 	saveKerasModel(model, "ANN_mnist_writtenNumberImages")
 	# learning curves
-	#summarize_diagnostics(histories)
-	#summarize estimated performance
-	#summarize_performance(scores)
+	summarize_diagnostics(histories)
+	# summarize estimated performance
+	summarize_performance(scores)
 	
 ## precit data
 # input: keras model, data (images shape:Nx4)
