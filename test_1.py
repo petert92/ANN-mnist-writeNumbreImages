@@ -1,20 +1,22 @@
 # baseline cnn model for mnist
-from keras.backend import batch_normalization
-from keras.layers.normalization.batch_normalization import BatchNormalization
 from numpy import mean
 from numpy import std
 from numpy import argmax
-from keras.models import load_model
 from matplotlib import pyplot
 from sklearn.model_selection import KFold
+from keras.backend import batch_normalization
+from keras.layers.normalization.batch_normalization import BatchNormalization
 from keras.datasets import mnist
 from keras.utils.np_utils import to_categorical
+from keras.models import load_model
 from keras.models import Sequential
 from keras.layers import Conv2D
 from keras.layers import MaxPooling2D
 from keras.layers import Dense
 from keras.layers import Flatten
 from tensorflow.keras.optimizers import SGD
+from keras.preprocessing.image import load_img
+from keras.preprocessing.image import img_to_array
 
 def load_dataset():
 	# load dataset and plot samples
@@ -100,9 +102,7 @@ def evaluate_model(dataX, dataY, n_folds=5):
 		if acc > scores[i-1]:
 			bestModel = model
 		i+=1
-		#print(trainX.shape)
-		#prediccion = model.predict(trainX[1][::][::][::])
-		#print(prediccion)
+
 	return scores, histories, bestModel
 #(scores, histories, model) = evaluate_model(dataX, dataY, n_folds=5)
 
@@ -161,11 +161,27 @@ def run_test_harness():
 	summarize_diagnostics(histories)
 	# summarize estimated performance
 	summarize_performance(scores)
-	
+
+## load and prepare the image
+# input: name image file
+# output: reshape image
+def load_image(filename):
+	# load the image
+	img = load_img(filename, grayscale=True, target_size=(28, 28))
+	# convert to array
+	img = img_to_array(img)
+	# reshape into a single sample with 1 channel
+	img = img.reshape(1, 28, 28, 1)
+	# prepare pixel data
+	img = img.astype('float32')
+	img = img / 255.0
+	return img
+
 ## precit data
 # input: keras model, data (images shape:Nx4)
-def predictKerasModel_modelClass(model, data):
-	probabilitiesVecto = model.predict(data)
-	print(argmax(probabilitiesVecto, axis=1))
+def printPredict_from_KerasSeqModel(model, data):
+	probabilitiesVector = model.predict(data)
+	print("Probabilities Vector= %s" % probabilitiesVector)
+	print(argmax(probabilitiesVector, axis=1))
 
 run_test_harness()
