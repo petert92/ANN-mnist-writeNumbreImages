@@ -64,12 +64,16 @@ def prep_pixels(train, test):
 def define_model():
 	model = Sequential()
 	model.add(Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_uniform', input_shape=(28, 28, 1))) # convolutional front-end: 32 filters->size(3,3)
-	model.add(BatchNormalization())
-	model.add(MaxPooling2D((2, 2)))
+	#model.add(BatchNormalization())	# model2
+	model.add(MaxPooling2D((2, 2)))	
+	model.add(Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_uniform')) # model3
+	model.add(Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_uniform')) # model3
+	#model.add(BatchNormalization()) # model3
+	model.add(MaxPooling2D((2, 2))) # model3
 	model.add(Flatten()) # The filter maps can then be flattened to provide features to the classifier
 	# From here is a multi-class classification task
 	model.add(Dense(100, activation='relu', kernel_initializer='he_uniform')) # interpret the feature
-	model.add(BatchNormalization())
+	#model.add(BatchNormalization())	# model2
 	model.add(Dense(10, activation='softmax')) # output= 10 cause 10 classes
 	# compile model
 	opt = SGD(lr=0.01, momentum=0.9) # stochastic gradient descent optimizer. learning rate=0.01, momentum=0.9
@@ -112,7 +116,7 @@ def saveKerasModel(model,fileName):
 	model.save(fileName)
 
 ## load model from H5 file
-# input: fileName.h5
+# input: fileName
 # output: keras model
 def loadKerasModel(fileName):
 	model = load_model(fileName)
@@ -156,7 +160,7 @@ def run_test_harness():
 	trainX, testX = prep_pixels(trainX, testX)
 	# evaluate model
 	scores, histories, model = evaluate_model(trainX, trainY)
-	saveKerasModel(model, "ANN_mnist_writtenNumberImages")
+	saveKerasModel(model, "ANN_mnist_writtenNumberImages_model3")
 	# learning curves
 	summarize_diagnostics(histories)
 	# summarize estimated performance
