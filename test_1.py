@@ -64,11 +64,11 @@ def prep_pixels(train, test):
 def define_model():
 	model = Sequential()
 	model.add(Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_uniform', input_shape=(28, 28, 1))) # convolutional front-end: 32 filters->size(3,3)
-	#model.add(BatchNormalization())	# model2
+	model.add(BatchNormalization())	# model2
 	model.add(MaxPooling2D((2, 2)))	
 	model.add(Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_uniform')) # model3
 	model.add(Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_uniform')) # model3
-	#model.add(BatchNormalization()) # model3
+	model.add(BatchNormalization()) # model3
 	model.add(MaxPooling2D((2, 2))) # model3
 	model.add(Flatten()) # The filter maps can then be flattened to provide features to the classifier
 	# From here is a multi-class classification task
