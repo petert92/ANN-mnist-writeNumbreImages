@@ -1,4 +1,5 @@
 # baseline cnn model for mnist
+from datetime import datetime
 from numpy import mean
 from numpy import std
 from numpy import argmax
@@ -17,6 +18,7 @@ from keras.layers import Flatten
 from tensorflow.keras.optimizers import SGD
 from keras.preprocessing.image import load_img
 from keras.preprocessing.image import img_to_array
+from keras import callbacks
 
 def load_dataset():
 	# load dataset and plot samples
@@ -76,7 +78,7 @@ def define_model():
 	#model.add(BatchNormalization())	# model2
 	model.add(Dense(10, activation='softmax')) # output= 10 cause 10 classes
 	# compile model
-	opt = SGD(lr=0.01, momentum=0.9) # stochastic gradient descent optimizer. learning rate=0.01, momentum=0.9
+	opt = SGD(learning_rate=0.01, momentum=0.9) # stochastic gradient descent optimizer. learning rate=0.01, momentum=0.9
 	model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy']) # loss func, monitoring->accuracy
 	return model
 #model = define_model()
@@ -84,8 +86,13 @@ def define_model():
 ## evaluate a model using k-fold cross-validation (10 epochs, batch=32)
 # input: training dataset
 # output: list of accuracy scores and training histories and best model
-def evaluate_model(dataX, dataY, n_folds=5):
+def evaluate_model(dataX, dataY, n_folds=2):
 	scores, histories = list(), list()
+	
+	# Define the Keras TensorBoard callback. A way to visualize tranining 
+	#logdir="logs/fit/" + datetime.now().strftime("%Y%m%d-%H%M%S")
+	#tensorboard_callback = callbacks.TensorBoard(log_dir=logdir)
+	
 	# prepare cross validation
 	kfold = KFold(n_folds, shuffle=True, random_state=1)
 	# enumerate splits
@@ -96,7 +103,7 @@ def evaluate_model(dataX, dataY, n_folds=5):
 		# select rows for train and test
 		trainX, trainY, testX, testY = dataX[train_ix], dataY[train_ix], dataX[test_ix], dataY[test_ix]
 		# fit model
-		history = model.fit(trainX, trainY, epochs=10, batch_size=32, validation_data=(testX, testY), verbose=0)
+		history = model.fit(trainX, trainY, epochs=10, batch_size=32, validation_data=(testX, testY), verbose=0] #, callbacks=[tensorboard_callback])
 		# evaluate model
 		_, acc = model.evaluate(testX, testY, verbose=0)
 		print('> %.3f' % (acc * 100.0))
@@ -123,7 +130,7 @@ def loadKerasModel(fileName):
 	return model
 
 
-## plot diagnostic learning curves
+## plot diagnostic learning curves. Another way to visualize training
 # input: histories from train and evaluate
 # output: screen plots
 def summarize_diagnostics(histories):
